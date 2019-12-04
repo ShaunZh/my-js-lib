@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "noImplicitAny": true,
+    "baseUrl": ".",
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "declaration": true,
+    "sourceMap": true,
+    "lib": [
+      "DOM",
+      "ES6"
+    ],
+    "removeComments": true,
+  },
+  // 生效的范围
+  "include": [
+    "src/**/*"
+  ]
+}
