@@ -1,0 +1,26 @@
+{
+  "name": "wxtoken",
+  "version": "0.1.0",
+  "description": "weixin authorization",
+  "main": "dist/cmjs/index.js",
+  "scripts": {
+    "build: cmjs": "tsc -P tsconfig.json",
+    "build: es6": "tsc -P tsconfig.json --module=es6 --outDir dist/es6",
+    "build": "npm run build:cmjs && npm run build:es6"
+  },
+  "module": "dist/es6/index.js",
+  "keywords": [
+    "wxAuthorization"
+  ],
+  "author": "Hexon",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^12.12.14",
+    "@typescript-eslint/eslint-plugin": "^2.10.0",
+    "@typescript-eslint/parser": "^2.10.0",
+    "eslint": "^6.7.2",
+    "eslint-config-alloy": "^3.4.0",
+    "ts-node": "^8.5.4",
+    "typescript": "^3.7.2"
+  }
+}
