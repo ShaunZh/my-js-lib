@@ -9,17 +9,14 @@ interface WxConfig {
   timestamp: string;
   nonceStr: string;
   signature: string;
-  [propName: string]: string;
+  jsApiList: Array<string>;
 }
 
 interface WxLocation {
   code?: string;
 }
-// 用于声明不知道属性值的对象
-interface GeneralObj {
-  [propName: string]: string;
-}
 
+// 用于声明不知道属性值的对象
 interface WxSignatureResponse {
   code: number;
   result: WxConfig;
@@ -47,26 +44,32 @@ class SingletonWxAuth {
   }
   private _isAuth: Boolean = false; // 是否已经授权登录
   private _isWxsdkReady: Boolean = false; //  微信sdk是否已准备
+
   // private _isWxBroswer: Boolean = false; // 是否为微信浏览器
-  private _wxConfig: WxConfig; // 通过微信sdk签名获取的微信配置
-  private _wxJsApiList: Array<String> = [
-    "chooseWXPay",
-    "updateAppMessageShareData",
-    "updateTimelineShareData", //
-    "onMenuShareTimeline",
-    "onMenuShareAppMessage", //
-    "chooseImage",
-    "previewImage",
-    "uploadImage",
-    "downloadImage", //
-    "hideOptionMenu",
-    "showOptionMenu", //
-    "hideMenuItems",
-    "showMenuItems", //
-    "hideAllNonBaseMenuItem",
-    "showAllNonBaseMenuItem",
-    "closeWindow"
-  ];
+  private _wxConfig: WxConfig = {
+    appId: undefined,
+    timestamp: undefined,
+    nonceStr: undefined,
+    signature: undefined,
+    jsApiList: [
+      "chooseWXPay",
+      "updateAppMessageShareData",
+      "updateTimelineShareData", //
+      "onMenuShareTimeline",
+      "onMenuShareAppMessage", //
+      "chooseImage",
+      "previewImage",
+      "uploadImage",
+      "downloadImage", //
+      "hideOptionMenu",
+      "showOptionMenu", //
+      "hideMenuItems",
+      "showMenuItems", //
+      "hideAllNonBaseMenuItem",
+      "showAllNonBaseMenuItem",
+      "closeWindow"
+    ]
+  }; // 通过微信sdk签名获取的微信配置
 
   private constructor() {
     if (SingletonWxAuth._instance) {
@@ -77,12 +80,12 @@ class SingletonWxAuth {
     SingletonWxAuth._instance = this;
   }
 
-  public setWxApiList(apiList: Array<String>) {
-    this._wxJsApiList = apiList;
+  public setWxApiList(apiList: Array<string>) {
+    this._wxConfig.jsApiList = apiList;
   }
 
-  public getWxApiList(): Array<String> {
-    return this._wxJsApiList;
+  public getWxApiList(): Array<string> {
+    return this._wxConfig.jsApiList;
   }
 
   public getWxSdkStatus(): Boolean {
@@ -100,7 +103,7 @@ class SingletonWxAuth {
         nonceStr: this._wxConfig.nonceStr, // 必填，生成签名的随机串
         signature: this._wxConfig.signature, // 必填，签名
         // 必填，需要使用的JS接口列表
-        jsApiList: this._wxJsApiList
+        jsApiList: this._wxConfig.jsApiList
       });
       window.wx.ready(() => {
         this._isWxsdkReady = true;
@@ -114,18 +117,17 @@ class SingletonWxAuth {
   }
   // 获取微信签名
   public httpGetWxSignature<P>(http: PromiseFunc, params: P): Promise<any> {
-    if (this._wxConfig.appId) {
+    if (this._wxConfig && this._wxConfig.appId) {
       return Promise.resolve();
     }
     return new Promise((resolve, reject) => {
       http(params)
         .then((res: WxSignatureResponse) => {
           const result: WxConfig = res.result;
-          for (let k in result) {
-            if (result.hasOwnProperty(k)) {
-              this._wxConfig[k] = result[k];
-            }
-          }
+          this._wxConfig.appId = result.appId;
+          this._wxConfig.nonceStr = result.nonceStr;
+          this._wxConfig.signature = result.signature;
+          this._wxConfig.timestamp = result.timestamp;
           // 调用微信签名
           this.wxSignatureConfig()
             .then(() => {
@@ -173,35 +175,39 @@ class SingletonWxAuth {
     authParams: AuthParams
   ): Promise<any> {
     return new Promise((resolve, reject) => {
-      this.httpGetWxSignature(httpSignature, authParams.signature).then(() => {
-        const searchObj: WxLocation = LocationSearch(window.location.search);
-        if (searchObj["code"]) {
-          httpAuth(authParams.auth)
-            .then((authRes: HttpResponse) => {
-              this._isAuth = true;
-              this.wxAuthLocationReplace();
-              resolve({
-                authStatus: "authSuccess",
-                authInfo: {
-                  ...authRes
-                }
+      this.httpGetWxSignature(httpSignature, authParams.signature)
+        .then(() => {
+          const searchObj: WxLocation = LocationSearch(window.location.search);
+          if (searchObj["code"]) {
+            httpAuth(authParams.auth)
+              .then((authRes: HttpResponse) => {
+                this._isAuth = true;
+                this.wxAuthLocationReplace();
+                resolve({
+                  authStatus: "authSuccess",
+                  authInfo: {
+                    ...authRes
+                  }
+                });
+              })
+              .catch(err => {
+                reject(err);
               });
-            })
-            .catch((err: string) => {
-              reject(err);
-            });
-        } else {
-          if (this._isAuth) {
-            resolve({
-              authStatus: "authed"
-            });
           } else {
-            resolve({
-              authStatus: "noAuth"
-            });
+            if (this._isAuth) {
+              resolve({
+                authStatus: "authed"
+              });
+            } else {
+              resolve({
+                authStatus: "noAuth"
+              });
+            }
           }
-        }
-      });
+        })
+        .catch(err => {
+          reject(err);
+        });
     });
   }
 }
