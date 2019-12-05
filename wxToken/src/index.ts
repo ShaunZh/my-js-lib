@@ -38,22 +38,7 @@ interface AuthParams {
 }
 
 type PromiseFunc = <P>(params: P) => Promise<any>;
-
-const LocationSearch = () => {
-  let s = window.location.search.substring(1);
-  let a: Array<string> = [];
-  if (s !== "") {
-    a = s.split("&");
-  }
-  let kv: GeneralObj = {};
-  for (let i of a) {
-    let str = i.split("=");
-    let k = str[0];
-    let v = str[1];
-    kv[k] = decodeURIComponent(v);
-  }
-  return kv;
-};
+import LocationSearch from "./LocationSearch";
 
 class SingletonWxAuth {
   private static _instance: SingletonWxAuth = new SingletonWxAuth();
@@ -189,7 +174,7 @@ class SingletonWxAuth {
   ): Promise<any> {
     return new Promise((resolve, reject) => {
       this.httpGetWxSignature(httpSignature, authParams.signature).then(() => {
-        const searchObj: WxLocation = LocationSearch();
+        const searchObj: WxLocation = LocationSearch(window.location.search);
         if (searchObj["code"]) {
           httpAuth(authParams.auth)
             .then((authRes: HttpResponse) => {
