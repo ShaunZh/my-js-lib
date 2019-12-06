@@ -5,6 +5,7 @@ declare global {
 }
 
 interface WxConfig {
+  debug: boolean;
   appId: string;
   timestamp: string;
   nonceStr: string;
@@ -42,11 +43,12 @@ class SingletonWxAuth {
   public static getInstance(): SingletonWxAuth {
     return SingletonWxAuth._instance;
   }
-  private _isAuth: Boolean = false; // 是否已经授权登录
-  private _isWxsdkReady: Boolean = false; //  微信sdk是否已准备
+  private _isAuth = false; // 是否已经授权登录
+  private _isWxsdkReady = false; //  微信sdk是否已准备
 
   // private _isWxBroswer: Boolean = false; // 是否为微信浏览器
   private _wxConfig: WxConfig = {
+    debug: false,
     appId: undefined,
     timestamp: undefined,
     nonceStr: undefined,
@@ -80,39 +82,48 @@ class SingletonWxAuth {
     SingletonWxAuth._instance = this;
   }
 
-  public setWxApiList(apiList: Array<string>) {
+  public setWxApiList(apiList: string[]) {
     this._wxConfig.jsApiList = apiList;
   }
 
-  public getWxApiList(): Array<string> {
+  public getWxApiList(): string[] {
     return this._wxConfig.jsApiList;
   }
 
-  public getWxSdkStatus(): Boolean {
+  public getWxSdkStatus(): boolean {
     return this._isWxsdkReady;
+  }
+
+  public setWxDebug(debug: boolean) {
+    this._wxConfig.debug = debug;
   }
 
   // 微信签名配置
   public wxSignatureConfig(): Promise<any> {
     return new Promise((resolve, reject) => {
-      // 是微信浏览器
-      window.wx.config({
-        debug: false, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
-        appId: this._wxConfig.appId, // 必填，公众号的唯一标识
-        timestamp: this._wxConfig.timestamp, // 必填，生成签名的时间戳
-        nonceStr: this._wxConfig.nonceStr, // 必填，生成签名的随机串
-        signature: this._wxConfig.signature, // 必填，签名
-        // 必填，需要使用的JS接口列表
-        jsApiList: this._wxConfig.jsApiList
-      });
-      window.wx.ready(() => {
-        this._isWxsdkReady = true;
+      // TODO: 要验证此处是否需要添加在已经微信授权后才能进行jssdk签名
+      if (this._isAuth) {
+        // 是微信浏览器
+        window.wx.config({
+          debug: this._wxConfig.debug, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
+          appId: this._wxConfig.appId, // 必填，公众号的唯一标识
+          timestamp: this._wxConfig.timestamp, // 必填，生成签名的时间戳
+          nonceStr: this._wxConfig.nonceStr, // 必填，生成签名的随机串
+          signature: this._wxConfig.signature, // 必填，签名
+          // 必填，需要使用的JS接口列表
+          jsApiList: this._wxConfig.jsApiList
+        });
+        window.wx.ready(() => {
+          this._isWxsdkReady = true;
+          resolve();
+        });
+        window.wx.error((err: HttpResponse) => {
+          console.error("wx.config error");
+          reject(err);
+        });
+      } else {
         resolve();
-      });
-      window.wx.error((err: HttpResponse) => {
-        console.error("wx.config error");
-        reject(err);
-      });
+      }
     });
   }
   // 获取微信签名
