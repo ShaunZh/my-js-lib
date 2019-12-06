@@ -1,7 +1,7 @@
 import LocationSearch from "../lib/wxToken/src/LocationSearch";
 
 const testData =
-  "?appid=appidappid&redirect_uri=http://baidu.com&response_type=code&scope=snsapi_base&agentid=agentId&state=STATE#wechat_redirect";
+  "?appid=appidappi&redirect_uri=http://baidu.com&response_type=code&scope=snsapi_base&agentid=agentId&state=STATE#wechat_redirect";
 
 const expectData = {
   appid: "appidappid",
