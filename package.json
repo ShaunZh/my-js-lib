@@ -1,0 +1,23 @@
+{
+  "name": "my-js-lib",
+  "version": "1.0.0",
+  "description": "js 类库",
+  "main": "",
+  "scripts": {
+    "docs": "vuepress dev docs",
+    "docs:build": "vuepress build docs && cp -rf ./docs/.vuepress/dist/* ./docs && rm -r ./docs/.vuepress/dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShaunZh/my-js-lib.git"
+  },
+  "author": "Hexon",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ShaunZh/my-js-lib/issues"
+  },
+  "homepage": "https://github.com/ShaunZh/my-js-lib#readme",
+  "devDependencies": {
+    "vuepress": "^1.2.0"
+  }
+}
