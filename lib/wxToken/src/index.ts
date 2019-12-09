@@ -6,6 +6,7 @@ declare global {
 
 interface WxConfig {
   debug: boolean;
+
   appId: string;
   timestamp: string;
   nonceStr: string;
